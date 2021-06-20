@@ -4,7 +4,7 @@ CREATE DATABASE departmentDB;
 
 USE DATABASE departmentDB;
 
-create table departments (
+create table department (
     id INT NOT NULL AUTO_INCREMENT
     name VARCHAR(30)
 );
