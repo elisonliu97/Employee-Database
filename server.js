@@ -64,7 +64,7 @@ async function startingOptions() {
 
 // FUNCTION TO VIEW ALL EMPLOYEES
 async function viewAllEmployees() {
-    connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id', async (err, res) => {
+    connection.query('SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, role.title as Title, role.salary as Salary, department.name as Department, CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY e.id;', async (err, res) => {
         if (err) throw err;
         console.table(res);
         startingOptions();
@@ -85,7 +85,7 @@ async function viewByDepartment() {
                 }
             ]
         )
-        connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id AND department.name = ?', [response.role_id], (err, res) => {
+        connection.query('SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, role.title as Title, role.salary as Salary, department.name as Department, CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id AND department.name = ? ORDER BY e.id;', [response.role_id], (err, res) => {
             if (err) throw err;
             console.table(res);
             startingOptions();
@@ -113,7 +113,7 @@ async function viewByManager() {
                 employee_id = employee.id;
             }
         })
-        connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id AND employee.manager_id = ?', [employee_id], (err, res) => {
+        connection.query('SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, role.title as Title, role.salary as Salary, department.name as Department, CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id AND e.manager_id = ? ORDER BY e.id;', [employee_id], (err, res) => {
             if (err) throw err;
             console.table(res);
             startingOptions();
