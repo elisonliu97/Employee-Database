@@ -29,9 +29,9 @@ connection.connect((err) => {
 });
 
 async function startingOptions() {
-    choicesArr = ["View All Employees", "View All Employees by Department", 
-    "View All Employees by Manager", "Add Data", "Remove Data", 
-    "Update Employee Role", "Update Employee Manager", "View Department Budget", "Exit"] 
+    choicesArr = ["View All Employees", "View All Employees by Department",
+        "View All Employees by Manager", "Add Data", "Remove Data",
+        "Update Employee Role", "Update Employee Manager", "View Department Budget", "Exit"]
     const response = await inquirer.prompt(
         [
             {
@@ -47,7 +47,7 @@ async function startingOptions() {
             await viewAllEmployees();
             break;
         case "View All Employees by Department":
-            await getBudget();
+            await viewByDepartment();
             break;
         case "View All Employees by Manager":
             await viewByManager();
@@ -87,7 +87,7 @@ async function viewAllEmployees() {
 
 // FUNCTION TO VIEW BY DEPARTMENT
 async function viewByDepartment() {
-    connection.query('SELECT * FROM department', async (err, res) => {
+    connection.query('SELECT * FROM department', async (err, departmentData) => {
         if (err) throw err;
         const response = await inquirer.prompt(
             [
@@ -95,13 +95,13 @@ async function viewByDepartment() {
                     name: "department_id",
                     message: "What department would you like to check?: ",
                     type: "list",
-                    choices: res.map(department => department.name)
+                    choices: departmentData.map(department => department.name)
                 }
             ]
         )
-        connection.query(viewQuery + ' AND department.name = ? ORDER BY e.id;', [response.department_id], (err, res) => {
+        connection.query(viewQuery + ' AND department.name = ? ORDER BY e.id;', [response.department_id], (err, finalData) => {
             if (err) throw err;
-            console.table(res);
+            console.table(finalData);
             startingOptions();
         })
     })
@@ -109,8 +109,7 @@ async function viewByDepartment() {
 
 // FUNCTION TO VIEW BY MANAGER
 async function viewByManager() {
-    let employee_id
-    connection.query('SELECT * FROM employee', async (err, res) => {
+    connection.query('SELECT * FROM employee', async (err, employeeData) => {
         if (err) throw err;
         const response = await inquirer.prompt(
             [
@@ -118,18 +117,14 @@ async function viewByManager() {
                     name: 'employee',
                     message: 'Choose the manager: ',
                     type: 'list',
-                    choices: res.map(employee => employee.first_name + " " + employee.last_name)
+                    choices: employeeData.map(employee => ({name:employee.first_name + " " + employee.last_name, value:employee.id}))
                 }
             ]
         )
-        res.forEach((employee) => {
-            if (response.employee === employee.first_name + " " + employee.last_name) {
-                employee_id = employee.id;
-            }
-        })
-        connection.query(viewQuery + ' AND e.manager_id = ? ORDER BY e.id;', [employee_id], (err, res) => {
+        console.log(response.employee)
+        connection.query(viewQuery + ' AND e.manager_id = ? ORDER BY e.id;', [response.employee], (err, finalData) => {
             if (err) throw err;
-            console.table(res);
+            console.table(finalData);
             startingOptions();
         })
 
@@ -156,7 +151,8 @@ async function addDepartment() {
 
 // FUNCTION TO ADD A ROLE
 async function addRole() {
-    connection.query('SELECT * FROM department', async (err, res) => {
+    connection.query('SELECT * FROM department', async (err, departmentData) => {
+        if (err) throw err;
         const response = await inquirer.prompt(
             [
                 {
@@ -173,12 +169,12 @@ async function addRole() {
                     name: 'department_id',
                     type: 'list',
                     message: 'What department is this under?: ',
-                    choices: res.map((department) => department.name)
+                    choices: departmentData.map((department) => department.name)
                 }
             ]
         )
         let department_id
-        res.forEach((department) => {
+        departmentData.forEach((department) => {
             if (department.name === response.department_id) {
                 department_id = department.id;
             }
@@ -195,7 +191,7 @@ async function addRole() {
 
 // FUNCTION TO ADD AN EMPLOYEE
 async function addEmployee() {
-    connection.query('SELECT * FROM role', async (err, res) => {
+    connection.query('SELECT * FROM role', async (err, roleData) => {
         if (err) throw err;
         const name_response = await inquirer.prompt(
             [
@@ -222,16 +218,16 @@ async function addEmployee() {
             ]
         )
         let role_id
-        res.forEach((role) => {
+        roleData.forEach((role) => {
             if (role.title === role_response.role_id) {
                 role_id = role.id;
             }
         })
 
         let manager_id
-        connection.query('SELECT * FROM employee', async (err, res) => {
+        connection.query('SELECT * FROM employee', async (err, employeeData) => {
             if (err) throw err;
-            let managerArray = res.map(employee => employee.first_name + " " + employee.last_name)
+            let managerArray = employeeData.map(employee => employee.first_name + " " + employee.last_name)
             managerArray.push("None")
             const manager_response = await inquirer.prompt(
                 [
@@ -243,7 +239,7 @@ async function addEmployee() {
                     }
                 ]
             )
-            res.forEach((employee) => {
+            employeeData.forEach((employee) => {
                 if (manager_response.manager === employee.first_name + " " + employee.last_name) {
                     manager_id = employee.id;
                 }
@@ -287,7 +283,7 @@ async function addOptions() {
 async function updateEmployeeRole() {
     let employee_id
     let role_id
-    connection.query('SELECT * FROM employee', async (err, res) => {
+    connection.query('SELECT * FROM employee', async (err, employeeData) => {
         if (err) throw err;
         const employee_response = await inquirer.prompt(
             [
@@ -295,16 +291,16 @@ async function updateEmployeeRole() {
                     name: "employee",
                     message: "Which employee's role would you like to update?: ",
                     type: "list",
-                    choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                    choices: employeeData.map(employee => employee.first_name + " " + employee.last_name),
                 }
             ]
         )
-        res.forEach((employee) => {
+        employeeData.forEach((employee) => {
             if (employee_response.employee === employee.first_name + " " + employee.last_name) {
                 employee_id = employee.id;
             }
         })
-        connection.query('SELECT * FROM role', async (err, res) => {
+        connection.query('SELECT * FROM role', async (err, roleData) => {
             if (err) throw err;
             const role_response = await inquirer.prompt(
                 [
@@ -312,17 +308,20 @@ async function updateEmployeeRole() {
                         name: "role",
                         message: "What will be the new role?: ",
                         type: "list",
-                        choices: res.map(role => role.title)
+                        choices: roleData.map(role => role.title)
                     }
                 ]
             )
-            res.forEach((role) => {
+            roleData.forEach((role) => {
                 if (role_response.role === role.title) {
                     role_id = role.id
                 }
             })
-            connection.query('UPDATE employee SET role_id = ? WHERE id = ?', [role_id, employee_id])
-            startingOptions();
+            connection.query('UPDATE employee SET role_id = ? WHERE id = ?', [role_id, employee_id], (err, res) => {
+                if (err) throw err;
+                console.log("Updated Employee's Role")
+                startingOptions();
+            })
         })
     })
 }
@@ -331,7 +330,7 @@ async function updateEmployeeRole() {
 async function updateEmployeeManager() {
     let employee_id
     let manager_id
-    connection.query('SELECT * FROM employee', async (err, res) => {
+    connection.query('SELECT * FROM employee', async (err, employeeData) => {
         if (err) throw err;
         const employee_response = await inquirer.prompt(
             [
@@ -339,16 +338,16 @@ async function updateEmployeeManager() {
                     name: "employee",
                     message: "Which employee's manager would you like to update?: ",
                     type: "list",
-                    choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                    choices: employeeData.map(employee => employee.first_name + " " + employee.last_name),
                 }
             ]
         )
-        res.forEach((employee) => {
+        employeeData.forEach((employee) => {
             if (employee_response.employee === employee.first_name + " " + employee.last_name) {
                 employee_id = employee.id;
             }
         })
-        connection.query('SELECT * FROM employee', async (err, res) => {
+        connection.query('SELECT * FROM employee', async (err, employeeData) => {
             if (err) throw err;
             const employee_response = await inquirer.prompt(
                 [
@@ -360,13 +359,16 @@ async function updateEmployeeManager() {
                     }
                 ]
             )
-            res.forEach((employee) => {
+            employeeData.forEach((employee) => {
                 if (employee_response.employee === employee.first_name + " " + employee.last_name) {
                     manager_id = employee.id;
                 }
             })
-            connection.query('UPDATE employee SET manager_id = ? WHERE id = ?', [manager_id, employee_id])
-            startingOptions();
+            connection.query('UPDATE employee SET manager_id = ? WHERE id = ?', [manager_id, employee_id], (err, res) => {
+                if (err) throw err;
+                console.log("Updated Employee's Manager")
+                startingOptions();
+            })
         })
     })
 }
@@ -399,7 +401,7 @@ async function removeOptions() {
 // NOTE CANNOT DELETE MANAGERS YET
 async function removeEmployee() {
     let employee_id
-    connection.query('SELECT * FROM employee', async (err, res) => {
+    connection.query('SELECT * FROM employee', async (err, employeeData) => {
         if (err) throw err;
         const employee_response = await inquirer.prompt(
             [
@@ -407,11 +409,11 @@ async function removeEmployee() {
                     name: "employee",
                     message: "Which employee is being removed?: ",
                     type: "list",
-                    choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                    choices: employeeData.map(employee => employee.first_name + " " + employee.last_name),
                 }
             ]
         )
-        res.forEach((employee) => {
+        employeeData.forEach((employee) => {
             if (employee_response.employee === employee.first_name + " " + employee.last_name) {
                 employee_id = employee.id;
             }
@@ -427,7 +429,7 @@ async function removeEmployee() {
 // FUNCTION TO REMOVE ROLE
 async function removeRole() {
     let role_id
-    connection.query('SELECT * FROM role', async (err, res) => {
+    connection.query('SELECT * FROM role', async (err, roleData) => {
         if (err) throw err;
         const response = await inquirer.prompt(
             [
@@ -435,11 +437,11 @@ async function removeRole() {
                     name: "role",
                     message: "Which role is being removed?: ",
                     type: "list",
-                    choices: res.map(role => role.title),
+                    choices: roleData.map(role => role.title),
                 }
             ]
         )
-        res.forEach((role) => {
+        roleData.forEach((role) => {
             if (response.role === role.title) {
                 role_id = role.id;
             }
@@ -455,7 +457,7 @@ async function removeRole() {
 // FUNCTION TO REMOVE DEPARTMENT
 async function removeDepartment() {
     let department_id
-    connection.query('SELECT * FROM department', async (err, res) => {
+    connection.query('SELECT * FROM department', async (err, departmentData) => {
         if (err) throw err;
         const response = await inquirer.prompt(
             [
@@ -463,11 +465,11 @@ async function removeDepartment() {
                     name: "department",
                     message: "Which department is being removed?: ",
                     type: "list",
-                    choices: res.map(department => department.name),
+                    choices: departmentData.map(department => department.name),
                 }
             ]
         )
-        res.forEach((department) => {
+        departmentData.forEach((department) => {
             if (response.department === department.name) {
                 department_id = department.id;
             }
@@ -484,7 +486,7 @@ async function removeDepartment() {
 async function getBudget() {
     let department_id
     let budget = 0
-    connection.query('SELECT * FROM department', async (err, res) => {
+    connection.query('SELECT * FROM department', async (err, departmentData) => {
         if (err) throw err;
         const response = await inquirer.prompt(
             [
@@ -492,18 +494,18 @@ async function getBudget() {
                     name: "department_id",
                     message: "What department would you like to check?: ",
                     type: "list",
-                    choices: res.map(department => department.name)
+                    choices: departmentData.map(department => department.name)
                 }
             ]
         )
-        res.forEach((department) => {
+        departmentData.forEach((department) => {
             if (response.department_id === department.name) {
                 department_id = department.id;
             }
         })
-        connection.query(viewQuery + ' AND department.id =  ?',[department_id], (err, res) => {
+        connection.query(viewQuery + ' AND department.id =  ?', [department_id], (err, finalData) => {
             if (err) throw err;
-            res.forEach((employee) => {
+            finalData.forEach((employee) => {
                 budget += employee.Salary
             })
             console.log("The budget for this department is $" + budget)
