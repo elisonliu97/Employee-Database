@@ -2,6 +2,13 @@
 const mysql = require('mysql')
 const inquirer = require('inquirer')
 
+// VARIABLES
+let viewQuery = 'SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, '
+viewQuery += 'role.title as Title, role.salary as Salary, department.name as Department, '
+viewQuery += 'CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e '
+viewQuery += 'LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id '
+viewQuery += 'INNER JOIN department ON role.department_id = department.id'
+
 const connection = mysql.createConnection({
     host: 'localhost',
 
@@ -64,7 +71,7 @@ async function startingOptions() {
 
 // FUNCTION TO VIEW ALL EMPLOYEES
 async function viewAllEmployees() {
-    connection.query('SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, role.title as Title, role.salary as Salary, department.name as Department, CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY e.id;', async (err, res) => {
+    connection.query(viewQuery + ' ORDER BY e.id;', async (err, res) => {
         if (err) throw err;
         console.table(res);
         startingOptions();
@@ -85,7 +92,7 @@ async function viewByDepartment() {
                 }
             ]
         )
-        connection.query('SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, role.title as Title, role.salary as Salary, department.name as Department, CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id AND department.name = ? ORDER BY e.id;', [response.role_id], (err, res) => {
+        connection.query(viewQuery + ' AND department.name = ? ORDER BY e.id;', [response.role_id], (err, res) => {
             if (err) throw err;
             console.table(res);
             startingOptions();
@@ -113,7 +120,7 @@ async function viewByManager() {
                 employee_id = employee.id;
             }
         })
-        connection.query('SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, role.title as Title, role.salary as Salary, department.name as Department, CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee e LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id AND e.manager_id = ? ORDER BY e.id;', [employee_id], (err, res) => {
+        connection.query(viewQuery + ' AND e.manager_id = ? ORDER BY e.id;', [employee_id], (err, res) => {
             if (err) throw err;
             console.table(res);
             startingOptions();
@@ -313,8 +320,50 @@ async function updateEmployeeRole() {
     })
 }
 
+// FUNCTION TO UPDATE MANAGER
+async function updateEmployeeManager() {
+    let employee_id
+    let manager_id
+    connection.query('SELECT * FROM employee', async (err, res) => {
+        if (err) throw err;
+        const employee_response = await inquirer.prompt(
+            [
+                {
+                    name: "employee",
+                    message: "Which employee's manager would you like to update?: ",
+                    type: "list",
+                    choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                }
+            ]
+        )
+        res.forEach((employee) => {
+            if (employee_response.employee === employee.first_name + " " + employee.last_name) {
+                employee_id = employee.id;
+            }
+        })
+        connection.query('SELECT * FROM employee', async (err, res) => {
+            if (err) throw err;
+            const employee_response = await inquirer.prompt(
+                [
+                    {
+                        name: "employee",
+                        message: "Who will be their new manager?: ",
+                        type: "list",
+                        choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                    }
+                ]
+            )
+            res.forEach((employee) => {
+                if (employee_response.employee === employee.first_name + " " + employee.last_name) {
+                    manager_id = employee.id;
+                }
+            })
+            connection.query('UPDATE employee SET manager_id = ? WHERE id = ?', [manager_id, employee_id])
+            startingOptions();
+        })
+    })
+}
+
 // NEED TO DO
-// CHANGE ADD EMPLOYEE TO ADD EMPLOYEE/ROLE/DEPARTMENT
 // REMOVE EMPLOYEE/ROLE/DEPARTMENT
-// UPDATE MANAGER
 // VIEW TOTAL BUDGET OF DEPARTMENT
