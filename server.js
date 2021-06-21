@@ -17,21 +17,21 @@ const connection = mysql.createConnection({
 connection.connect((err) => {
     if (err) throw err;
     console.log(`connected as id ${connection.threadId}\n`);
-    createProduct();
+    startingOptions();
 });
 
 async function startingOptions() {
-    const response = inquirer.prompt(
+    const response = await inquirer.prompt(
         [
             {
                 name: "choices",
                 type: "list",
                 message: "What would you like to do?: ",
-                choices: ["View All Employees", "View All Employees by Department", "View All Employees by Manager", "Add Employee", "Remove Employee", "Update Employee Role", "Update Employee Manager"]
+                choices: ["View All Employees", "View All Employees by Department", "View All Employees by Manager", "Add Employee", "Remove Employee", "Update Employee Role", "Update Employee Manager", "Exit"]
             }
         ]
     )
-    switch(response.choices) {
+    switch (response.choices) {
         case "View All Employees":
             await viewAllEmployees();
             break;
@@ -53,12 +53,19 @@ async function startingOptions() {
         case "Update Employee Manager":
             await updateEmployeeManager();
             break;
+        case "Exit":
+            connection.end();
+            break;
         default:
             console.log("Not a valid option")
             break;
     }
 }
 
-async function init() {
-    const response = inquirer.prompt()
+async function viewAllEmployees() {
+    connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id', async (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        startingOptions();
+    })
 }
