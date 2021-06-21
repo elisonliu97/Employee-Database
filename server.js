@@ -95,3 +95,54 @@ async function viewByDepartment() {
 // async function viewByManager() {
 // connection.query('SELECT * FROM employee WHERE ')
 // }
+
+async function addEmployee() {
+    connection.query('SELECT * FROM role', async (err, res) => {
+        if (err) throw err;
+        const name_response = await inquirer.prompt(
+            [
+                {
+                    name: 'first_name',
+                    type: 'input',
+                    message: 'What is their first name?: '
+                },
+                {
+                    name: 'last_name',
+                    type: 'input',
+                    message: "What is their last name?: "
+                }
+            ]
+        )
+        const role_response = await inquirer.prompt(
+            [
+                {
+                    name: "role_id",
+                    message: "What role will they have?: ",
+                    type: "list",
+                    choices: res.map(role => role.title)
+                }
+            ]
+        )
+        let role_id
+        res.forEach((role) => {
+            if (role.title === role_response.role_id) {
+                role_id = role.id;
+            }
+        })
+        
+        // const manager_response = await inquirer.prompt(
+        //     [
+        //         {
+        //             name: "has_Manager",
+        //             message: "Do they have a manager?: ",
+        //             type: "confirm"
+        //         }
+        //     ]
+        // )
+
+        // NEED TO CHECK HOW TO VIEW BY MANAGER
+        
+        connection.query('INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?);', [name_response.first_name, name_response.last_name, role_id])
+    })
+
+}
