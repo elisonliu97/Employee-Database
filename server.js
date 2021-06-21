@@ -141,6 +141,7 @@ async function addRole() {
             }
         })
         connection.query("INSERT INTO role (title, salary, department_id)VALUES (?, ?, ?);", [response.title, response.salary, department_id]);
+        startingOptions();
     })
 
 }
@@ -192,6 +193,53 @@ async function addEmployee() {
         // NEED TO CHECK HOW TO VIEW BY MANAGER
 
         connection.query('INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?);', [name_response.first_name, name_response.last_name, role_id]);
+        startingOptions();
     })
+
+}
+
+async function updateEmployeeRole() {
+    let employee_id
+    let role_id
+    connection.query('SELECT * FROM employee', async (err, res) => {
+        if (err) throw err;
+        const employee_response = await inquirer.prompt(
+            [
+                {
+                    name: "employee",
+                    message: "Which employee's role would you like to update?: ",
+                    type: "list",
+                    choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                }
+            ]
+        )
+        res.forEach((employee) => {
+            if (employee_response.employee === employee.first_name + " " + employee.last_name) {
+                employee_id = employee.id;
+            }
+        })
+        connection.query('SELECT * FROM role', async (err, res) => {
+            if (err) throw err;
+            const role_response = await inquirer.prompt(
+                [
+                    {
+                        name: "role",
+                        message: "What will be the new role?: ",
+                        type: "list",
+                        choices: res.map(role => role.title)
+                    }
+                ]
+            )
+            res.forEach((role) => {
+                if (role_response.role === role.title) {
+                    role_id = role.id
+                }
+            })
+            connection.query('UPDATE employee SET role_id = ? WHERE id = ?', [role_id, employee_id])
+            startingOptions();
+        })
+    })
+
+
 
 }
