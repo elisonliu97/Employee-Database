@@ -96,6 +96,22 @@ async function viewByDepartment() {
 // connection.query('SELECT * FROM employee WHERE ')
 // }
 
+async function addDepartment() {
+    const response = await inquirer.prompt(
+        [
+            {
+                name: 'name',
+                type: 'input',
+                message: 'What department are you adding?: '
+            }
+        ]
+    )
+    connection.query('INSERT INTO department (name) VALUES (?)', [response.name], (err, res) => {
+        if (err) throw err;
+        console.log("Department Added")
+    })
+}
+
 async function addEmployee() {
     connection.query('SELECT * FROM role', async (err, res) => {
         if (err) throw err;
