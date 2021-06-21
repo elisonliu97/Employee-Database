@@ -364,6 +364,36 @@ async function updateEmployeeManager() {
     })
 }
 
+// FUNCTION TO REMOVE EMPLOYEE
+// NOTE CANNOT DELETE MANAGERS YET
+async function removeEmployee() {
+    let employee_id
+    connection.query('SELECT * FROM employee', async (err, res) => {
+        if (err) throw err;
+        const employee_response = await inquirer.prompt(
+            [
+                {
+                    name: "employee",
+                    message: "Which employee is being removed?: ",
+                    type: "list",
+                    choices: res.map(employee => employee.first_name + " " + employee.last_name),
+                }
+            ]
+        )
+        res.forEach((employee) => {
+            if (employee_response.employee === employee.first_name + " " + employee.last_name) {
+                employee_id = employee.id;
+            }
+        })
+        connection.query('DELETE FROM employee WHERE ?', [{"employee.id":employee_id}], (err, res) => {
+            if (err) throw err;
+            console.log('DELETED EMPLOYEE');
+            startingOptions();
+        })
+    })
+}
+
+
 // NEED TO DO
 // REMOVE EMPLOYEE/ROLE/DEPARTMENT
 // VIEW TOTAL BUDGET OF DEPARTMENT
