@@ -112,6 +112,39 @@ async function addDepartment() {
     })
 }
 
+async function addRole() {
+    connection.query('SELECT * FROM department', async (err, res) => {
+        const response = await inquirer.prompt(
+            [
+                {
+                    name: 'title',
+                    type: 'input',
+                    message: "What is the title?: "
+                },
+                {
+                    name: 'salary',
+                    type: 'number',
+                    message: 'What is the salary of the role?: '
+                },
+                {
+                    name: 'department_id',
+                    type: 'list',
+                    message: 'What department is this under?: ',
+                    choices: res.map((department) => department.name)
+                }
+            ]
+        )
+        let department_id
+        res.forEach((department) => {
+            if (department.name === response.department_id) {
+                department_id = department.name;
+            }
+        })
+        connection.query("INSERT INTO role (title, salary, department_id)VALUES (?, ?, ?);", [response.title, response.salary, department_id]);
+    })
+
+}
+
 async function addEmployee() {
     connection.query('SELECT * FROM role', async (err, res) => {
         if (err) throw err;
@@ -145,7 +178,7 @@ async function addEmployee() {
                 role_id = role.id;
             }
         })
-        
+
         // const manager_response = await inquirer.prompt(
         //     [
         //         {
@@ -157,8 +190,8 @@ async function addEmployee() {
         // )
 
         // NEED TO CHECK HOW TO VIEW BY MANAGER
-        
-        connection.query('INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?);', [name_response.first_name, name_response.last_name, role_id])
+
+        connection.query('INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?);', [name_response.first_name, name_response.last_name, role_id]);
     })
 
 }
