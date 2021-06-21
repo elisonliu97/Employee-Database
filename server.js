@@ -83,18 +83,46 @@ async function viewByDepartment() {
                 }
             ]
         )
-        connection.query('SELECT * FROM employee INNER JOIN department ON employee.role_id = department.id AND department.name = ?', [response.role_id], (err, res) => {
+        connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id AND department.name = ?', [response.role_id], (err, res) => {
             if (err) throw err;
             console.table(res);
+            startingOptions();
         })
-        startingOptions();
     })
 }
 
 // NEED TO DO
-// async function viewByManager() {
-// connection.query('SELECT * FROM employee WHERE ')
-// }
+async function viewByManager() {
+    let employee_id
+    connection.query('SELECT * FROM employee', async (err, res) => {
+        if (err) throw err;
+        const response = await inquirer.prompt(
+            [
+                {
+                    name: 'employee',
+                    message: 'Choose the manager: ',
+                    type: 'list',
+                    choices: res.map(employee => employee.first_name + " " + employee.last_name)
+                }
+            ]
+        )
+        res.forEach((employee) => {
+            if (response.employee === employee.first_name + " " + employee.last_name) {
+                employee_id = employee.id;
+            }
+        })
+        connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id AND employee.manager_id = ?', [employee_id], (err, res) => {
+            if (err) throw err;
+            console.table(res);
+            startingOptions();
+        })
+
+    })
+}
+
+// PSEUDOCODE
+// GET LIST OF ALL EMPLOYEES
+// QUERY FOR ALL EMPLOYEES WHERE MANAGERID IS CHOSEN EMPLOYEE
 
 async function addDepartment() {
     const response = await inquirer.prompt(
