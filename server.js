@@ -27,7 +27,7 @@ async function startingOptions() {
                 name: "choices",
                 type: "list",
                 message: "What would you like to do?: ",
-                choices: ["View All Employees", "View All Employees by Department", "View All Employees by Manager", "Add Employee", "Remove Employee", "Update Employee Role", "Update Employee Manager", "Exit"]
+                choices: ["View All Employees", "View All Employees by Department", "View All Employees by Manager", "Add Data", "Remove Employee", "Update Employee Role", "Update Employee Manager", "Exit"]
             }
         ]
     )
@@ -41,8 +41,8 @@ async function startingOptions() {
         case "View All Employees by Manager":
             await viewByManager();
             break;
-        case "Add Employee":
-            await addEmployee();
+        case "Add Data":
+            await addOptions();
             break;
         case "Remove Employee":
             await removeEmployee();
@@ -62,6 +62,7 @@ async function startingOptions() {
     }
 }
 
+// FUNCTION TO VIEW ALL EMPLOYEES
 async function viewAllEmployees() {
     connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, employee.manager_id FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id', async (err, res) => {
         if (err) throw err;
@@ -70,6 +71,7 @@ async function viewAllEmployees() {
     })
 }
 
+// FUNCTION TO VIEW BY DEPARTMENT
 async function viewByDepartment() {
     connection.query('SELECT * FROM department', async (err, res) => {
         if (err) throw err;
@@ -91,7 +93,7 @@ async function viewByDepartment() {
     })
 }
 
-// NEED TO DO
+// FUNCTION TO VIEW BY MANAGER
 async function viewByManager() {
     let employee_id
     connection.query('SELECT * FROM employee', async (err, res) => {
@@ -120,10 +122,7 @@ async function viewByManager() {
     })
 }
 
-// PSEUDOCODE
-// GET LIST OF ALL EMPLOYEES
-// QUERY FOR ALL EMPLOYEES WHERE MANAGERID IS CHOSEN EMPLOYEE
-
+// FUNCTION TO ADD A DEPARTMENT
 async function addDepartment() {
     const response = await inquirer.prompt(
         [
@@ -137,9 +136,11 @@ async function addDepartment() {
     connection.query('INSERT INTO department (name) VALUES (?)', [response.name], (err, res) => {
         if (err) throw err;
         console.log("Department Added")
+        startingOptions();
     })
 }
 
+// FUNCTION TO ADD A ROLE
 async function addRole() {
     connection.query('SELECT * FROM department', async (err, res) => {
         const response = await inquirer.prompt(
@@ -165,15 +166,20 @@ async function addRole() {
         let department_id
         res.forEach((department) => {
             if (department.name === response.department_id) {
-                department_id = department.name;
+                department_id = department.id;
             }
         })
-        connection.query("INSERT INTO role (title, salary, department_id)VALUES (?, ?, ?);", [response.title, response.salary, department_id]);
-        startingOptions();
+        connection.query("INSERT INTO role (title, salary, department_id)VALUES (?, ?, ?);", [response.title, response.salary, department_id], (err, res) => {
+            if (err) throw err;
+            console.log('Role Added');
+            startingOptions();
+        });
+
     })
 
 }
 
+// FUNCTION TO ADD AN EMPLOYEE
 async function addEmployee() {
     connection.query('SELECT * FROM role', async (err, res) => {
         if (err) throw err;
@@ -228,13 +234,42 @@ async function addEmployee() {
                     manager_id = employee.id;
                 }
             })
-            connection.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);', [name_response.first_name, name_response.last_name, role_id, manager_id]);
-            startingOptions();
+            connection.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);', [name_response.first_name, name_response.last_name, role_id, manager_id], (err, res) => {
+                if (err) throw err;
+                console.log('Employee Added')
+                startingOptions();
+            });
+
         })
     })
-
 }
 
+// FUNCTION TO GET OPTIONS TO ADD
+async function addOptions() {
+    let response = await inquirer.prompt(
+        [
+            {
+                name: 'choice',
+                message: "What would you like to add?: ",
+                type: 'list',
+                choices: ['Employee', 'Role', 'Department']
+            }
+        ]
+    )
+    switch (response.choice) {
+        case 'Employee':
+            await addEmployee();
+            break;
+        case 'Role':
+            await addRole();
+            break;
+        case 'Department':
+            await addDepartment();
+            break;
+    }
+}
+
+// FUNCTION TO UPDATE AN EMPLOYEE'S ROLE
 async function updateEmployeeRole() {
     let employee_id
     let role_id
@@ -277,3 +312,9 @@ async function updateEmployeeRole() {
         })
     })
 }
+
+// NEED TO DO
+// CHANGE ADD EMPLOYEE TO ADD EMPLOYEE/ROLE/DEPARTMENT
+// REMOVE EMPLOYEE/ROLE/DEPARTMENT
+// UPDATE MANAGER
+// VIEW TOTAL BUDGET OF DEPARTMENT
