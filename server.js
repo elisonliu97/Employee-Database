@@ -208,20 +208,29 @@ async function addEmployee() {
             }
         })
 
-        // const manager_response = await inquirer.prompt(
-        //     [
-        //         {
-        //             name: "has_Manager",
-        //             message: "Do they have a manager?: ",
-        //             type: "confirm"
-        //         }
-        //     ]
-        // )
-
-        // NEED TO CHECK HOW TO VIEW BY MANAGER
-
-        connection.query('INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?);', [name_response.first_name, name_response.last_name, role_id]);
-        startingOptions();
+        let manager_id
+        connection.query('SELECT * FROM employee', async (err, res) => {
+            if (err) throw err;
+            let managerArray = res.map(employee => employee.first_name + " " + employee.last_name)
+            managerArray.push("None")
+            const manager_response = await inquirer.prompt(
+                [
+                    {
+                        name: 'manager',
+                        message: 'Choose the manager: ',
+                        type: 'list',
+                        choices: managerArray
+                    }
+                ]
+            )
+            res.forEach((employee) => {
+                if (manager_response.manager === employee.first_name + " " + employee.last_name) {
+                    manager_id = employee.id;
+                }
+            })
+            connection.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);', [name_response.first_name, name_response.last_name, role_id, manager_id]);
+            startingOptions();
+        })
     })
 
 }
@@ -267,7 +276,4 @@ async function updateEmployeeRole() {
             startingOptions();
         })
     })
-
-
-
 }
