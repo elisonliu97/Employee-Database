@@ -1,6 +1,7 @@
 // DEPENDENCIES
 const mysql = require('mysql')
 const inquirer = require('inquirer')
+const { start } = require('repl')
 
 // VARIABLES
 let viewQuery = 'SELECT e.id as ID, e.first_name as FirstName, e.last_name as LastName, '
@@ -28,13 +29,16 @@ connection.connect((err) => {
 });
 
 async function startingOptions() {
+    choicesArr = ["View All Employees", "View All Employees by Department", 
+    "View All Employees by Manager", "Add Data", "Remove Data", 
+    "Update Employee Role", "Update Employee Manager", "View Department Budget", "Exit"] 
     const response = await inquirer.prompt(
         [
             {
                 name: "choices",
                 type: "list",
                 message: "What would you like to do?: ",
-                choices: ["View All Employees", "View All Employees by Department", "View All Employees by Manager", "Add Data", "Remove Employee", "Update Employee Role", "Update Employee Manager", "Exit"]
+                choices: choicesArr
             }
         ]
     )
@@ -43,7 +47,7 @@ async function startingOptions() {
             await viewAllEmployees();
             break;
         case "View All Employees by Department":
-            await viewByDepartment();
+            await getBudget();
             break;
         case "View All Employees by Manager":
             await viewByManager();
@@ -51,7 +55,7 @@ async function startingOptions() {
         case "Add Data":
             await addOptions();
             break;
-        case "Remove Employee":
+        case "Remove Data":
             await removeOptions();
             break;
         case "Update Employee Role":
@@ -59,6 +63,9 @@ async function startingOptions() {
             break;
         case "Update Employee Manager":
             await updateEmployeeManager();
+            break;
+        case "View Department Budget":
+            await getBudget();
             break;
         case "Exit":
             connection.end();
@@ -85,14 +92,14 @@ async function viewByDepartment() {
         const response = await inquirer.prompt(
             [
                 {
-                    name: "role_id",
+                    name: "department_id",
                     message: "What department would you like to check?: ",
                     type: "list",
                     choices: res.map(department => department.name)
                 }
             ]
         )
-        connection.query(viewQuery + ' AND department.name = ? ORDER BY e.id;', [response.role_id], (err, res) => {
+        connection.query(viewQuery + ' AND department.name = ? ORDER BY e.id;', [response.department_id], (err, res) => {
             if (err) throw err;
             console.table(res);
             startingOptions();
@@ -409,7 +416,7 @@ async function removeEmployee() {
                 employee_id = employee.id;
             }
         })
-        connection.query('DELETE FROM employee WHERE ?', [{"employee.id":employee_id}], (err, res) => {
+        connection.query('DELETE FROM employee WHERE ?', [{ "employee.id": employee_id }], (err, res) => {
             if (err) throw err;
             console.log('DELETED EMPLOYEE');
             startingOptions();
@@ -437,7 +444,7 @@ async function removeRole() {
                 role_id = role.id;
             }
         })
-        connection.query('DELETE FROM role WHERE ?', [{"role.id":role_id}], (err, res) => {
+        connection.query('DELETE FROM role WHERE ?', [{ "role.id": role_id }], (err, res) => {
             if (err) throw err;
             console.log('DELETED ROLE');
             startingOptions();
@@ -465,7 +472,7 @@ async function removeDepartment() {
                 department_id = department.id;
             }
         })
-        connection.query('DELETE FROM department WHERE ?', [{"department.id":department_id}], (err, res) => {
+        connection.query('DELETE FROM department WHERE ?', [{ "department.id": department_id }], (err, res) => {
             if (err) throw err;
             console.log('DELETED DEPARTMENT');
             startingOptions();
@@ -473,6 +480,34 @@ async function removeDepartment() {
     })
 }
 
-// NEED TO DO
-
-// VIEW TOTAL BUDGET OF DEPARTMENT
+// FUNCTION TO GET TOTAL BUDGET OF A DEPARTMENT
+async function getBudget() {
+    let department_id
+    let budget = 0
+    connection.query('SELECT * FROM department', async (err, res) => {
+        if (err) throw err;
+        const response = await inquirer.prompt(
+            [
+                {
+                    name: "department_id",
+                    message: "What department would you like to check?: ",
+                    type: "list",
+                    choices: res.map(department => department.name)
+                }
+            ]
+        )
+        res.forEach((department) => {
+            if (response.department_id === department.name) {
+                department_id = department.id;
+            }
+        })
+        connection.query(viewQuery + ' AND department.id =  ?',[department_id], (err, res) => {
+            if (err) throw err;
+            res.forEach((employee) => {
+                budget += employee.Salary
+            })
+            console.log("The budget for this department is $" + budget)
+            startingOptions();
+        })
+    })
+}
