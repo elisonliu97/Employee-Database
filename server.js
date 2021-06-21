@@ -52,7 +52,7 @@ async function startingOptions() {
             await addOptions();
             break;
         case "Remove Employee":
-            await removeEmployee();
+            await removeOptions();
             break;
         case "Update Employee Role":
             await updateEmployeeRole();
@@ -364,6 +364,30 @@ async function updateEmployeeManager() {
     })
 }
 
+async function removeOptions() {
+    let response = await inquirer.prompt(
+        [
+            {
+                name: 'choice',
+                message: "What would you like to remove?: ",
+                type: 'list',
+                choices: ['Employee', 'Role', 'Department']
+            }
+        ]
+    )
+    switch (response.choice) {
+        case 'Employee':
+            await removeEmployee();
+            break;
+        case 'Role':
+            await removeRole();
+            break;
+        case 'Department':
+            await removeDepartment();
+            break;
+    }
+}
+
 // FUNCTION TO REMOVE EMPLOYEE
 // NOTE CANNOT DELETE MANAGERS YET
 async function removeEmployee() {
@@ -393,7 +417,62 @@ async function removeEmployee() {
     })
 }
 
+// FUNCTION TO REMOVE ROLE
+async function removeRole() {
+    let role_id
+    connection.query('SELECT * FROM role', async (err, res) => {
+        if (err) throw err;
+        const response = await inquirer.prompt(
+            [
+                {
+                    name: "role",
+                    message: "Which role is being removed?: ",
+                    type: "list",
+                    choices: res.map(role => role.title),
+                }
+            ]
+        )
+        res.forEach((role) => {
+            if (response.role === role.title) {
+                role_id = role.id;
+            }
+        })
+        connection.query('DELETE FROM role WHERE ?', [{"role.id":role_id}], (err, res) => {
+            if (err) throw err;
+            console.log('DELETED ROLE');
+            startingOptions();
+        })
+    })
+}
+
+// FUNCTION TO REMOVE DEPARTMENT
+async function removeDepartment() {
+    let department_id
+    connection.query('SELECT * FROM department', async (err, res) => {
+        if (err) throw err;
+        const response = await inquirer.prompt(
+            [
+                {
+                    name: "department",
+                    message: "Which department is being removed?: ",
+                    type: "list",
+                    choices: res.map(department => department.name),
+                }
+            ]
+        )
+        res.forEach((department) => {
+            if (response.department === department.name) {
+                department_id = department.id;
+            }
+        })
+        connection.query('DELETE FROM department WHERE ?', [{"department.id":department_id}], (err, res) => {
+            if (err) throw err;
+            console.log('DELETED DEPARTMENT');
+            startingOptions();
+        })
+    })
+}
 
 // NEED TO DO
-// REMOVE EMPLOYEE/ROLE/DEPARTMENT
+
 // VIEW TOTAL BUDGET OF DEPARTMENT
