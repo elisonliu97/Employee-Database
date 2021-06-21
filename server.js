@@ -69,3 +69,29 @@ async function viewAllEmployees() {
         startingOptions();
     })
 }
+
+async function viewByDepartment() {
+    connection.query('SELECT * FROM department', async (err, res) => {
+        if (err) throw err;
+        const response = await inquirer.prompt(
+            [
+                {
+                    name: "role_id",
+                    message: "What department would you like to check?: ",
+                    type: "list",
+                    choices: res.map(department => department.name)
+                }
+            ]
+        )
+        connection.query('SELECT * FROM employee INNER JOIN department ON employee.role_id = department.id AND department.name = ?', [response.role_id], (err, res) => {
+            if (err) throw err;
+            console.table(res);
+        })
+        startingOptions();
+    })
+}
+
+// NEED TO DO
+// async function viewByManager() {
+// connection.query('SELECT * FROM employee WHERE ')
+// }
