@@ -29,7 +29,7 @@ viewQuery += 'CONCAT_WS(" ", s.first_name, s.last_name) AS Manager FROM employee
 viewQuery += 'LEFT JOIN employee s ON s.id = e.manager_id INNER JOIN role ON e.role_id = role.id '
 viewQuery += 'INNER JOIN department ON role.department_id = department.id'
 
-// FUNCTION TO START ASKING
+// FUNCTION TO START THE FIRST INQUIRER PROMPT FOR WHICH OPTION USER WANTS TO TAKE
 async function startingOptions() {
     choicesArr = ["View All Employees", "View All Employees by Department",
         "View All Employees by Manager", "Add Data", "Remove Data",
@@ -44,6 +44,7 @@ async function startingOptions() {
             }
         ]
     )
+    // HANDLES CHOICES
     switch (response.choices) {
         case "View All Employees":
             await viewAllEmployees();
@@ -123,13 +124,11 @@ async function viewByManager() {
                 }
             ]
         )
-        console.log(response.employee)
         connection.query(viewQuery + ' AND e.manager_id = ? ORDER BY e.id;', [response.employee], (err, finalData) => {
             if (err) throw err;
             console.table(finalData);
             startingOptions();
         })
-
     })
 }
 

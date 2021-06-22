@@ -4,10 +4,10 @@ INSERT INTO department (name)
 VALUES ('Coding');
 
 INSERT INTO role (title, salary, department_id)
-VALUES ("Lead Software Developer", 200000, 1);
+VALUES ("Lead Software Developer", 150000, 1);
 
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES ("Bob", "Bobertson", 1);
+VALUES ("Bob", "Boberton", 1);
 
 
 INSERT INTO department (name)
@@ -22,7 +22,7 @@ VALUES("Lily", "Little", 2);
 
 
 INSERT INTO role (title, salary, department_id)
-VALUES ("Software Developer", 150000, 1);
+VALUES ("Software Developer", 100000, 1);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Rob", "Robertson", 3, 1);
+VALUES ("Rob", "Robson", 3, 1);
