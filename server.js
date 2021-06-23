@@ -170,22 +170,15 @@ async function addRole() {
                     name: 'department_id',
                     type: 'list',
                     message: 'What department is this under?: ',
-                    choices: departmentData.map((department) => department.name)
+                    choices: departmentData.map((department) => ({name: department.name, value: department.id}))
                 }
             ]
         )
-        let department_id
-        departmentData.forEach((department) => {
-            if (department.name === response.department_id) {
-                department_id = department.id;
-            }
-        })
-        connection.query("INSERT INTO role (title, salary, department_id)VALUES (?, ?, ?);", [response.title, response.salary, department_id], (err, res) => {
+        connection.query("INSERT INTO role (title, salary, department_id)VALUES (?, ?, ?);", [response.title, response.salary, response.department_id], (err, res) => {
             if (err) throw err;
             console.log('Role Added');
             startingOptions();
         });
-
     })
 
 }
