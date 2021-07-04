@@ -29,7 +29,9 @@
   You will be given a list of options to choose from.
   Follow the prompts to get to the option you want.
   
-  [Demo](#DEMO_LINK)
+  [Demo Part 1](https://drive.google.com/file/d/1XCj0rrjxnlU7Nb2-ohJCzzhVdLZCqhIP/view)
+  [Demo Part 2](https://drive.google.com/file/d/19Oi_6lmorn7HnELQznU858SDsCeTgQI-/view)
+  [Demo Part 3](https://drive.google.com/file/d/1CdNya-n4SuDygN3FINbcdMV1A3b8EYIZ/view)
 
   ## License
   [MIT](https://spdx.org/licenses/MIT.html)
