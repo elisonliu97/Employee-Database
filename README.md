@@ -19,6 +19,7 @@
   Clone the repo and install dependencies using npm install.
   If necessary, run create.sql to create a database.
   Run seed.sql if you want some starter data in your database.
+  Create a .env file and include information necessary about your database in it, such as login and database name.
   To run the command line application, use npm start
 
   ## Usage
