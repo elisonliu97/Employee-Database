@@ -4,8 +4,8 @@
   This is a command line application that accesses an employee database and displays data that is requested. It can show all employees in the database, or employees by department or manager. It can add employees, roles, and departments to the database, as well as remove them. It can also update roles and managers for employees. There is an option to view the total budget of a department.
 
   ## Table of Contents
+  - [Tools and Technologies](#Tools-and-Technologies)
   - [Installation](#installation)
-  - [Tools and Technologies](#Tools_and_Technologies)
   - [Usage](#usage)
   - [License](#license)
   - [Contact me](#questions)
