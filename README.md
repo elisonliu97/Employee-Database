@@ -5,15 +5,15 @@
 
   ## Table of Contents
   - [Installation](#installation)
-  - [Dependencies](#dependencies)
+  - [Tools and Technologies](#Tools and Technologies)
   - [Usage](#usage)
   - [License](#license)
   - [Contact me](#questions)
 
-  ## Dependencies
-  This application uses several dependencies:
-  - mysql
-  - inquirer
+  ## Tools and Technologies
+  - MySQL
+  - Javascript
+  - Inquirer
 
   ## Installation
   Clone the repo and install dependencies using npm install.
